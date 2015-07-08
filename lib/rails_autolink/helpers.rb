@@ -62,8 +62,8 @@ module RailsAutolink
           sanitize_options = options[:sanitize_options] || {}
           text = conditional_sanitize(text, sanitize, sanitize_options).to_str
           case options[:link].to_sym
-            when :all             then conditional_html_safe(auto_link_email_addresses(auto_link_urls(text, options[:html], options, &block), options[:html], &block), sanitize)
-            when :email_addresses then conditional_html_safe(auto_link_email_addresses(text, options[:html], &block), sanitize)
+            when :all             then conditional_html_safe(auto_link_email_addresses(auto_link_urls(text, options[:html], options, &block), options[:html], options, &block), sanitize)
+            when :email_addresses then conditional_html_safe(auto_link_email_addresses(text, options[:html], options, &block), sanitize)
             when :urls            then conditional_html_safe(auto_link_urls(text, options[:html], options, &block), sanitize)
           end
         end
@@ -113,7 +113,12 @@ module RailsAutolink
                   link_text = sanitize(link_text)
                   href      = sanitize(href)
                 end
-                content_tag(:a, link_text, link_attributes.merge('href' => href), !!options[:sanitize]) + punctuation.reverse.join('')
+
+                unless options[:custom_format].empty?
+                  options[:custom_format] % link_text
+                else
+                  content_tag(:a, link_text, link_attributes.merge('href' => href), !!options[:sanitize]) + punctuation.reverse.join('')
+                end
               end
             end
           end
@@ -133,7 +138,12 @@ module RailsAutolink
                   text         = sanitize(text)
                   display_text = sanitize(display_text) unless text == display_text
                 end
-                mail_to text, display_text, html_options
+
+                unless options[:custom_format].empty?
+                  options[:custom_format] % display_text
+                else
+                  mail_to text, display_text, html_options
+                end
               end
             end
           end
